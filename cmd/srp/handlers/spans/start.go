@@ -9,6 +9,11 @@ import (
 
 type StartCmd struct {
 	Operation string `arg:"" help:"Operation name."`
+
+	Service  string `help:"Service name of the span."`
+	Resource string `help:"Resource name of the span."`
+	Type     string `help:"Span type of the span."`
+	SpanID   uint64 `help:"Specify a custom ID for the span."`
 }
 
 func (e *StartCmd) Run(s *state.AppState) error {
@@ -22,6 +27,18 @@ func (e *StartCmd) StatefulRun(state *spansState) error {
 	}
 	if state.curSpan != nil {
 		opts = append(opts, tracer.ChildOf(state.curSpan.spanContext))
+	}
+	if e.Service != "" {
+		opts = append(opts, tracer.ServiceName(e.Service))
+	}
+	if e.Resource != "" {
+		opts = append(opts, tracer.ResourceName(e.Resource))
+	}
+	if e.Type != "" {
+		opts = append(opts, tracer.SpanType(e.Type))
+	}
+	if e.SpanID != 0 {
+		opts = append(opts, tracer.WithSpanID(e.SpanID))
 	}
 	span := tracer.StartSpan(e.Operation, opts...)
 	spanCtx := span.Context()
